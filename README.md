@@ -6,7 +6,7 @@ Traditional books are outdated. Students need more than just books to enhance th
     
 **Approach to solve the problem**
 
-- Model is gets an image input from the user, user can click an image from a book or some reference. 
+- Model gets an image input from the user, user can click an image from a book or some reference. 
 - Image will be analysed and text will be extracted using OCR.
 - The raw text then analysed using spacy to provide a summary.
 - The summary helps the user to understand the context easily.
