@@ -1,19 +1,172 @@
-# Lens-for-e-learning
+# Lens for E-Learning MVP
 
-**Problem addressed**
+A mobile application that transforms physical textbook content into curated digital learning resources using OCR, NLP, and intelligent search.
 
-Traditional books are outdated. Students need more than just books to enhance their knowledge. Internet serves as the best platform to learn, but also it is not reliable for students. Some moderation is to be done for narrowing the contents for learning. And also to save search time for students.
-    
-**Approach to solve the problem**
+## Project Structure
 
-- Model gets an image input from the user, user can click an image from a book or some reference. 
-- Image will be analysed and text will be extracted using OCR.
-- The raw text then analysed using spacy to provide a summary.
-- The summary helps the user to understand the context easily.
-- From the summary keywords/Key phrases are extracted by understanding the content(RAKE).
-- Model will automate google search with the keywords/Key phrases available and return relevant top links(Website, Videos, Blogs, etc.,) to the user.
-- The proposed solution reduce the internet search time for the students. Our model will automate the search and will provide all the relevant processed reference.
+```
+lens-elearning-mvp/
+├── backend/              # FastAPI backend service
+│   ├── app/             # Application code
+│   ├── tests/           # Unit and property tests
+│   └── requirements.txt # Python dependencies
+├── mobile/              # Flutter mobile app
+│   ├── lib/            # Application code
+│   ├── test/           # Widget and unit tests
+│   └── pubspec.yaml    # Flutter dependencies
+├── infrastructure/      # AWS infrastructure (Terraform)
+│   └── terraform/      # Terraform configuration
+└── .github/            # CI/CD workflows
+    └── workflows/      # GitHub Actions
+```
 
-**Sample output**
+## Architecture
 
-![LEL_sample](https://user-images.githubusercontent.com/81686914/209423749-c5863c51-a0b8-4134-8cf9-01cdaaef3e85.png)
+- **Mobile App**: Flutter (iOS/Android)
+- **Backend API**: FastAPI on AWS Lambda
+- **Storage**: AWS S3 (images), DynamoDB (data)
+- **Authentication**: AWS Cognito
+- **OCR**: Tesseract
+- **NLP**: spaCy with RAKE keyword extraction
+- **Search**: YouTube Data API, Google Custom Search API
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- Flutter 3.0+
+- AWS Account (Free Tier)
+- Terraform 1.0+
+- Node.js 18+ (for some tools)
+
+### 1. Infrastructure Setup
+
+```bash
+cd infrastructure/terraform
+terraform init
+terraform apply
+```
+
+Save the outputs to configure backend and mobile app.
+
+### 2. Backend Setup
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your AWS credentials and API keys
+
+# Run tests
+pytest
+
+# Start development server
+uvicorn app.main:app --reload
+```
+
+### 3. Mobile App Setup
+
+```bash
+cd mobile
+flutter pub get
+
+# Run tests
+flutter test
+
+# Run on device/emulator
+flutter run
+```
+
+## Development Workflow
+
+### Backend Development
+
+1. Create feature branch from `develop`
+2. Write tests first (TDD approach)
+3. Implement functionality
+4. Run linting: `black app tests && isort app tests && flake8 app tests`
+5. Run tests: `pytest --cov=app`
+6. Create pull request
+
+### Mobile Development
+
+1. Create feature branch from `develop`
+2. Write widget/unit tests
+3. Implement UI and logic
+4. Run formatting: `dart format .`
+5. Run analysis: `flutter analyze`
+6. Run tests: `flutter test`
+7. Create pull request
+
+## Testing
+
+### Backend Testing
+
+```bash
+# Unit tests
+pytest tests/
+
+# Property-based tests
+pytest tests/ -k property
+
+# Coverage report
+pytest --cov=app --cov-report=html
+```
+
+### Mobile Testing
+
+```bash
+# Unit tests
+flutter test
+
+# Widget tests
+flutter test test/widget_test.dart
+
+# Coverage
+flutter test --coverage
+```
+
+## Deployment
+
+### Backend Deployment
+
+Lambda functions are deployed using AWS SAM or Serverless Framework (to be configured in later tasks).
+
+### Mobile Deployment
+
+```bash
+# Android
+flutter build apk --release
+
+# iOS
+flutter build ios --release
+```
+
+## Free Tier Compliance
+
+The system is designed to operate within AWS Free Tier limits:
+
+- **Lambda**: 1M requests/month, 400,000 GB-seconds
+- **DynamoDB**: 25GB storage, 25 RCU/WCU
+- **S3**: 5GB storage, 20,000 GET requests, 2,000 PUT requests
+- **Cognito**: 50,000 MAUs
+- **API Gateway**: 1M API calls/month
+
+Monitor usage in AWS Console to ensure compliance.
+
+## Documentation
+
+- [Requirements](.kiro/specs/lens-elearning-mvp/requirements.md)
+- [Design](.kiro/specs/lens-elearning-mvp/design.md)
+- [Tasks](.kiro/specs/lens-elearning-mvp/tasks.md)
+- [Infrastructure Setup](infrastructure/README.md)
+
+## License
+
+MIT License - See LICENSE file for details
