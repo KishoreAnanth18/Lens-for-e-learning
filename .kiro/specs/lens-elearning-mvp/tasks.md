@@ -230,11 +230,11 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - **Property 50: Lambda Execution Time Limit**
     - **Validates: Requirements 10.3**
 
-- [ ] 10. Checkpoint - Ensure backend is complete and tested
+- [x] 10. Checkpoint - Ensure backend is complete and tested
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement authentication module (Mobile App)
-  - [ ] 11.1 Create authentication service and UI
+- [x] 11. Implement authentication module (Mobile App)
+  - [x] 11.1 Create authentication service and UI
     - Implement IAuthService interface with Cognito SDK
     - Create AuthProvider for state management
     - Implement TokenManager with secure storage
@@ -261,8 +261,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test token refresh
     - _Requirements: 1.1, 1.3, 1.6, 1.7_
 
-- [ ] 12. Implement camera and image capture module (Mobile App)
-  - [ ] 12.1 Create camera service and UI
+- [x] 12. Implement camera and image capture module (Mobile App)
+  - [x] 12.1 Create camera service and UI
     - Implement ICameraService interface
     - Build camera screen with live preview
     - Add capture button and gallery picker

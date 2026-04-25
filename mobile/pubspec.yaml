@@ -19,12 +19,16 @@ dependencies:
   # Local Storage
   sqflite: ^2.3.0
   shared_preferences: ^2.2.2
-  path_provider: ^2.1.1
+  path_provider: ^2.1.2
   
   # Image Processing
-  image_picker: ^1.0.5
+  image_picker: ^1.0.7
   image: ^4.1.3
-  camera: ^0.10.5+5
+  camera: ^0.10.5+9
+  flutter_image_compress: ^2.1.0
+  permission_handler: ^11.3.0
+  uuid: ^4.3.3
+  path: ^1.9.0
   
   # Authentication
   flutter_secure_storage: ^9.0.0

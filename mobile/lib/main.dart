@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'core/app_config.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home_screen.dart';
+import 'services/auth_service_impl.dart';
+import 'services/token_manager.dart';
 
 void main() {
   runApp(const LensELearningApp());
@@ -10,29 +16,47 @@ class LensELearningApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Lens for E-Learning',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+    final tokenManager = TokenManager();
+    final authService = AuthServiceImpl(
+      baseUrl: AppConfig.baseUrl,
+      tokenManager: tokenManager,
+    );
+
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(
+            authService: authService,
+            tokenManager: tokenManager,
+          )..init(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Lens for E-Learning',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
+        ),
+        home: const _AuthGate(),
       ),
-      home: const HomePage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+/// Decides the initial route based on authentication state.
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lens for E-Learning'),
-      ),
-      body: const Center(
-        child: Text('Welcome to Lens for E-Learning'),
-      ),
-    );
+    final auth = context.watch<AuthProvider>();
+
+    if (auth.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return auth.isAuthenticated ? const HomeScreen() : const LoginScreen();
   }
 }
