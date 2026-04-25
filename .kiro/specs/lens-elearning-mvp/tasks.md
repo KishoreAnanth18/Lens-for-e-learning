@@ -47,8 +47,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test OAuth integration (Google, Facebook)
     - _Requirements: 1.2, 1.5, 1.6_
 
-- [-] 3. Implement image upload handler (Backend Lambda)
-  - [-] 3.1 Create upload handler Lambda function
+- [x] 3. Implement image upload handler (Backend Lambda)
+  - [x] 3.1 Create upload handler Lambda function
     - Implement POST /api/v1/scans endpoint
     - Add image format validation (JPEG, PNG, HEIC)
     - Add image size validation (max 2MB)
