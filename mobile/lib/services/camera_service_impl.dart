@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:camera/camera.dart';
+import 'package:camera/camera.dart' hide ImageFormat;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -19,7 +19,7 @@ import 'camera_service.dart';
 ///  - `path_provider` for local storage
 class CameraServiceImpl implements ICameraService {
   CameraController? _controller;
-  final ImagePicker _picker = const ImagePicker();
+  final ImagePicker _picker = ImagePicker();
   final _uuid = const Uuid();
 
   // ── Initialisation ──────────────────────────────────────────────────────────
