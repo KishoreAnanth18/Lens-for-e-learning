@@ -1,73 +1,58 @@
 # Infrastructure Setup
 
-This directory contains Terraform configuration for AWS infrastructure setup.
+Terraform configuration for AWS infrastructure.
 
 ## Prerequisites
 
-1. AWS Account (Free Tier eligible)
-2. AWS CLI installed and configured
-3. Terraform installed (>= 1.0)
+- AWS CLI configured (`aws configure`)
+- Terraform >= 1.0
 
-## Setup Instructions
-
-### 1. Configure AWS Credentials
-
-```bash
-aws configure
-```
-
-Enter your AWS Access Key ID, Secret Access Key, and default region (us-east-1).
-
-### 2. Initialize Terraform
+## Deploy
 
 ```bash
 cd infrastructure/terraform
 terraform init
-```
-
-### 3. Review Infrastructure Plan
-
-```bash
 terraform plan
-```
-
-### 4. Apply Infrastructure
-
-```bash
 terraform apply
 ```
 
-Type `yes` when prompted to create the resources.
-
-### 5. Save Outputs
-
-After successful deployment, save the outputs:
+Save outputs for backend configuration:
 
 ```bash
-terraform output > ../../backend/.terraform-outputs
+terraform output -json > ../../terraform-outputs.json
 ```
 
 ## Resources Created
 
-- **DynamoDB Table**: `lens-elearning-prod` with single-table design
-- **S3 Bucket**: `lens-elearning-images` with lifecycle policies
-- **Cognito User Pool**: For user authentication
-- **IAM Roles**: For Lambda execution with necessary permissions
+| Resource | Name |
+|----------|------|
+| DynamoDB Table | `lens-elearning-prod` |
+| S3 Bucket | `lens-elearning-images` |
+| Cognito User Pool | `lens-elearning-users` |
+| IAM Role | Lambda execution role |
 
-## Free Tier Compliance
+## Estimated Costs
 
-All resources are configured to stay within AWS Free Tier limits:
-- DynamoDB: On-demand billing (25GB storage, 25 RCU/WCU)
-- S3: Standard storage (5GB)
-- Cognito: Up to 50,000 MAUs
-- Lambda: 1M requests/month, 400,000 GB-seconds compute
+For light dev/testing (few requests per day):
 
-## Cleanup
+| Service | Cost/month |
+|---------|-----------|
+| DynamoDB | ~$0.01-0.05 |
+| S3 | ~$0.01-0.02 |
+| Lambda | ~$0.01-0.05 |
+| Cognito | $0.00 (first 50K users free) |
+| **Total** | **~$0.03-0.12** |
 
-To destroy all resources:
+Set up billing alerts at $1, $5, $10 thresholds in AWS Billing → Budgets.
+
+## Destroy (avoid ongoing charges)
 
 ```bash
 terraform destroy
 ```
 
-**Warning**: This will delete all data. Make sure to backup any important data before destroying.
+> Warning: this permanently deletes all data. Back up first.
+
+## Local Development (No AWS)
+
+Use LocalStack instead — see [LOCAL-DEVELOPMENT.md](../LOCAL-DEVELOPMENT.md).

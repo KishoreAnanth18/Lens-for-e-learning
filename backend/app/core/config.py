@@ -1,5 +1,8 @@
 """Application configuration"""
 
+from functools import lru_cache
+from typing import Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,13 +11,22 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
+    # LocalStack
+    USE_LOCALSTACK: bool = False
+    LOCALSTACK_ENDPOINT: str = "http://localhost:4566"
+
     # AWS Configuration
     AWS_REGION: str = "us-east-1"
-    AWS_ACCOUNT_ID: str = ""
-    S3_BUCKET_NAME: str = "lens-elearning-images"
-    DYNAMODB_TABLE_NAME: str = "lens-elearning-prod"
+    AWS_ACCOUNT_ID: str = "000000000000"
+    AWS_ACCESS_KEY_ID: str = "test"
+    AWS_SECRET_ACCESS_KEY: str = "test"
 
-    # Cognito Configuration
+    # Storage
+    S3_BUCKET_NAME: str = "lens-elearning-images"
+    DYNAMODB_TABLE_NAME: str = "lens-elearning-local"
+
+    # Cognito - not used in local dev (USE_MOCK_AUTH=True bypasses Cognito)
+    USE_MOCK_AUTH: bool = False
     COGNITO_USER_POOL_ID: str = ""
     COGNITO_CLIENT_ID: str = ""
     COGNITO_CLIENT_SECRET: str = ""
@@ -33,5 +45,25 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
 
+    @property
+    def aws_endpoint_url(self) -> Optional[str]:
+        """Returns LocalStack endpoint when enabled, None for real AWS."""
+        return self.LOCALSTACK_ENDPOINT if self.USE_LOCALSTACK else None
 
-settings = Settings()
+    @property
+    def boto3_kwargs(self) -> dict:
+        """Common kwargs for all boto3 clients/resources."""
+        kwargs = {"region_name": self.AWS_REGION}
+        if self.USE_LOCALSTACK:
+            kwargs["endpoint_url"] = self.LOCALSTACK_ENDPOINT
+            kwargs["aws_access_key_id"] = self.AWS_ACCESS_KEY_ID
+            kwargs["aws_secret_access_key"] = self.AWS_SECRET_ACCESS_KEY
+        return kwargs
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()
