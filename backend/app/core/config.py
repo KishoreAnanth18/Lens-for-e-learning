@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     COGNITO_CLIENT_ID: str = ""
     COGNITO_CLIENT_SECRET: str = ""
 
+    # Lambda Functions
+    NLP_LAMBDA_NAME: str = "lens-elearning-nlp-processor"
+
     # External APIs
     YOUTUBE_API_KEY: str = ""
     GOOGLE_SEARCH_API_KEY: str = ""

@@ -72,8 +72,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test S3 upload failures
     - _Requirements: 2.3, 2.4, 2.6_
 
-- [ ] 4. Implement OCR processor (Backend Lambda)
-  - [ ] 4.1 Create OCR processor Lambda function
+- [x] 4. Implement OCR processor (Backend Lambda)
+  - [x] 4.1 Create OCR processor Lambda function
     - Set up Tesseract OCR in Lambda layer
     - Implement image preprocessing (grayscale, contrast enhancement)
     - Run Tesseract OCR with confidence scores
