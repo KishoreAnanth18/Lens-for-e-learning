@@ -2,6 +2,9 @@
 
 from pydantic import BaseModel
 
+# Re-export NLP models so callers can import from models or nlp directly
+from app.api.scans.nlp import NLPEvent, NLPResult  # noqa: F401
+
 
 class ScanRequest(BaseModel):
     image_data: str  # Base64 encoded image

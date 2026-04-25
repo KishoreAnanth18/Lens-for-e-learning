@@ -33,6 +33,7 @@ class Settings(BaseSettings):
 
     # Lambda Functions
     NLP_LAMBDA_NAME: str = "lens-elearning-nlp-processor"
+    SEARCH_LAMBDA_NAME: str = "lens-elearning-search-processor"
 
     # External APIs
     YOUTUBE_API_KEY: str = ""

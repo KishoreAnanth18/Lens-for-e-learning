@@ -98,8 +98,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test various image formats
     - _Requirements: 3.4, 3.5, 3.6_
 
-- [ ] 5. Implement NLP processor (Backend Lambda)
-  - [ ] 5.1 Create NLP processor Lambda function
+- [x] 5. Implement NLP processor (Backend Lambda)
+  - [x] 5.1 Create NLP processor Lambda function
     - Set up spaCy with en_core_web_sm model in Lambda layer
     - Implement text summarization algorithm (150-200 words for long text)
     - Handle short text (<100 words) by returning original
