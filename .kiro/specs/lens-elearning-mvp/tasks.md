@@ -18,8 +18,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
   - Set up Cognito User Pool with email verification
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-- [ ] 2. Implement authentication service (Backend)
-  - [ ] 2.1 Create authentication API endpoints
+- [x] 2. Implement authentication service (Backend)
+  - [x] 2.1 Create authentication API endpoints
     - Implement POST /api/v1/auth/register endpoint with Cognito integration
     - Implement POST /api/v1/auth/login endpoint with JWT token generation
     - Implement POST /api/v1/auth/logout endpoint
@@ -47,8 +47,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test OAuth integration (Google, Facebook)
     - _Requirements: 1.2, 1.5, 1.6_
 
-- [ ] 3. Implement image upload handler (Backend Lambda)
-  - [ ] 3.1 Create upload handler Lambda function
+- [-] 3. Implement image upload handler (Backend Lambda)
+  - [-] 3.1 Create upload handler Lambda function
     - Implement POST /api/v1/scans endpoint
     - Add image format validation (JPEG, PNG, HEIC)
     - Add image size validation (max 2MB)
