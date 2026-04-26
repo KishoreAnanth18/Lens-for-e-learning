@@ -32,6 +32,10 @@ dependencies:
   
   # Authentication
   flutter_secure_storage: ^9.0.0
+
+  # Results actions
+  url_launcher: ^6.3.0
+  share_plus: ^10.0.2
   
   # UI Components
   cupertino_icons: ^1.0.6

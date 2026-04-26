@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/app_config.dart';
 import 'providers/auth_provider.dart';
+import 'providers/scan_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/auth_service_impl.dart';
+import 'services/scan_service_impl.dart';
 import 'services/token_manager.dart';
 
 void main() {
@@ -14,21 +16,28 @@ void main() {
 class LensELearningApp extends StatelessWidget {
   const LensELearningApp({super.key});
 
+  static final TokenManager _tokenManager = TokenManager();
+  static final AuthServiceImpl _authService = AuthServiceImpl(
+    baseUrl: AppConfig.baseUrl,
+    tokenManager: _tokenManager,
+  );
+  static final ScanServiceImpl _scanService = ScanServiceImpl(
+    baseUrl: AppConfig.baseUrl,
+    authService: _authService,
+  );
+
   @override
   Widget build(BuildContext context) {
-    final tokenManager = TokenManager();
-    final authService = AuthServiceImpl(
-      baseUrl: AppConfig.baseUrl,
-      tokenManager: tokenManager,
-    );
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
-            authService: authService,
-            tokenManager: tokenManager,
+            authService: _authService,
+            tokenManager: _tokenManager,
           )..init(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ScanProvider(scanService: _scanService),
         ),
       ],
       child: MaterialApp(

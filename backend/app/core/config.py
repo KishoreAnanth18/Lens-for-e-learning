@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     COGNITO_CLIENT_SECRET: str = ""
 
     # Lambda Functions
+    OCR_LAMBDA_NAME: str = "lens-elearning-ocr-processor"
     NLP_LAMBDA_NAME: str = "lens-elearning-nlp-processor"
     SEARCH_LAMBDA_NAME: str = "lens-elearning-search-processor"
 

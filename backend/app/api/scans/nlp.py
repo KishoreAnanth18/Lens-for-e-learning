@@ -177,7 +177,7 @@ def extract_keywords(text: str, min_phrases: int = 5, max_phrases: int = 15) -> 
 # Main processing handler
 # ---------------------------------------------------------------------------
 
-def process_nlp_event(event: NLPEvent) -> NLPResult:
+def process_nlp_event(event: NLPEvent, invoke_next_stage: bool = True) -> NLPResult:
     """
     Full NLP pipeline:
     1. Summarize extracted text (fallback to original on failure)
@@ -240,28 +240,29 @@ def process_nlp_event(event: NLPEvent) -> NLPResult:
             f"[scan_id={scan_id}] DynamoDB write failed: {exc}"
         ) from exc
 
-    # 5. Invoke Search Lambda asynchronously
-    try:
-        lambda_client = get_lambda_client()
-        search_payload = {
-            "scan_id": scan_id,
-            "user_id": event.user_id,
-            "keywords": keywords,
-            "summary": summary,
-        }
-        lambda_client.invoke(
-            FunctionName=settings.SEARCH_LAMBDA_NAME,
-            InvocationType="Event",  # async
-            Payload=json.dumps(search_payload).encode(),
-        )
-    except Exception as exc:
-        # Log but don't fail — NLP work is already persisted
-        logger.warning(
-            "[scan_id=%s] Failed to invoke Search Lambda (%s): %s",
-            scan_id,
-            settings.SEARCH_LAMBDA_NAME,
-            exc,
-        )
+    if invoke_next_stage:
+        # 5. Invoke Search Lambda asynchronously
+        try:
+            lambda_client = get_lambda_client()
+            search_payload = {
+                "scan_id": scan_id,
+                "user_id": event.user_id,
+                "keywords": keywords,
+                "summary": summary,
+            }
+            lambda_client.invoke(
+                FunctionName=settings.SEARCH_LAMBDA_NAME,
+                InvocationType="Event",  # async
+                Payload=json.dumps(search_payload).encode(),
+            )
+        except Exception as exc:
+            # Log but don't fail — NLP work is already persisted
+            logger.warning(
+                "[scan_id=%s] Failed to invoke Search Lambda (%s): %s",
+                scan_id,
+                settings.SEARCH_LAMBDA_NAME,
+                exc,
+            )
 
     return NLPResult(
         summary=summary,

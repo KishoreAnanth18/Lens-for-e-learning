@@ -79,7 +79,7 @@ def run_tesseract_ocr(image: Image.Image) -> tuple[str, float]:
 # Main processing handler
 # ---------------------------------------------------------------------------
 
-def process_ocr_event(event: OCREvent) -> OCRResult:
+def process_ocr_event(event: OCREvent, invoke_next_stage: bool = True) -> OCRResult:
     """
     Full OCR pipeline:
     1. Download image from S3
@@ -161,27 +161,28 @@ def process_ocr_event(event: OCREvent) -> OCRResult:
             f"[scan_id={scan_id}] DynamoDB write failed: {exc}"
         ) from exc
 
-    # 7. Invoke NLP Lambda asynchronously
-    try:
-        lambda_client = get_lambda_client()
-        nlp_payload = {
-            "scan_id": scan_id,
-            "user_id": event.user_id,
-            "extracted_text": extracted_text,
-        }
-        lambda_client.invoke(
-            FunctionName=settings.NLP_LAMBDA_NAME,
-            InvocationType="Event",  # async
-            Payload=json.dumps(nlp_payload).encode(),
-        )
-    except Exception as exc:
-        # Log but don't fail — OCR work is already persisted
-        logger.warning(
-            "[scan_id=%s] Failed to invoke NLP Lambda (%s): %s",
-            scan_id,
-            settings.NLP_LAMBDA_NAME,
-            exc,
-        )
+    if invoke_next_stage:
+        # 7. Invoke NLP Lambda asynchronously
+        try:
+            lambda_client = get_lambda_client()
+            nlp_payload = {
+                "scan_id": scan_id,
+                "user_id": event.user_id,
+                "extracted_text": extracted_text,
+            }
+            lambda_client.invoke(
+                FunctionName=settings.NLP_LAMBDA_NAME,
+                InvocationType="Event",  # async
+                Payload=json.dumps(nlp_payload).encode(),
+            )
+        except Exception as exc:
+            # Log but don't fail — OCR work is already persisted
+            logger.warning(
+                "[scan_id=%s] Failed to invoke NLP Lambda (%s): %s",
+                scan_id,
+                settings.NLP_LAMBDA_NAME,
+                exc,
+            )
 
     return OCRResult(
         extracted_text=extracted_text,
