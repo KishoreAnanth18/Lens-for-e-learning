@@ -5,10 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../providers/bookmark_provider.dart';
 import '../../models/scan_models.dart';
 import '../../providers/scan_provider.dart';
 
-class ResultsScreen extends StatelessWidget {
+class ResultsScreen extends StatefulWidget {
   const ResultsScreen({
     super.key,
     required this.sessionId,
@@ -17,9 +18,23 @@ class ResultsScreen extends StatelessWidget {
   final String sessionId;
 
   @override
+  State<ResultsScreen> createState() => _ResultsScreenState();
+}
+
+class _ResultsScreenState extends State<ResultsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<BookmarkProvider>().loadBookmarks();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final provider = context.watch<ScanProvider>();
-    final progress = provider.sessionById(sessionId);
+    final progress = provider.sessionById(widget.sessionId);
 
     if (progress == null || progress.result == null) {
       return Scaffold(
@@ -62,7 +77,9 @@ class ResultsScreen extends StatelessWidget {
                 children: [
                   for (final tab in tabs)
                     _ResultsList(
-                      sessionId: sessionId,
+                      sessionId: widget.sessionId,
+                      scanId: progress.scanId ?? result.scanId,
+                      resourceType: tab.title.toLowerCase().replaceAll('s', ''),
                       resources: tab.resources,
                     ),
                 ],
@@ -187,10 +204,14 @@ class _ResultsContextCard extends StatelessWidget {
 class _ResultsList extends StatelessWidget {
   const _ResultsList({
     required this.sessionId,
+    required this.scanId,
+    required this.resourceType,
     required this.resources,
   });
 
   final String sessionId;
+  final String scanId;
+  final String resourceType;
   final List<ScanResource> resources;
 
   @override
@@ -207,8 +228,7 @@ class _ResultsList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final resource = resources[index];
-        final provider = context.watch<ScanProvider>();
-        final bookmarked = provider.isBookmarked(sessionId, resource.url);
+        final bookmarked = context.watch<BookmarkProvider>().isBookmarked(resource.url);
 
         return Card(
           child: ListTile(
@@ -232,7 +252,11 @@ class _ResultsList extends StatelessWidget {
             ),
             trailing: IconButton(
               tooltip: bookmarked ? 'Remove bookmark' : 'Bookmark',
-              onPressed: () => context.read<ScanProvider>().toggleBookmark(sessionId, resource.url),
+              onPressed: () => context.read<BookmarkProvider>().toggleBookmark(
+                    scanId: scanId,
+                    resourceType: resourceType,
+                    resource: resource,
+                  ),
               icon: Icon(
                 bookmarked ? Icons.bookmark : Icons.bookmark_border,
               ),

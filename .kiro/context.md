@@ -56,6 +56,7 @@ There are also local env/runtime files present:
 - Cognito-backed auth flow is partially implemented
 - Scan upload endpoint exists in `backend/app/api/scans/router.py`
 - Scan status endpoint exists at `GET /api/v1/scans/{scan_id}`
+- Bookmark endpoints now exist at `POST /api/v1/scans/{scan_id}/bookmarks`, `GET /api/v1/bookmarks`, and `DELETE /api/v1/bookmarks/{bookmark_id}`
 - Image validation, upload to S3, thumbnail generation, duplicate detection, and scan metadata creation exist
 - Scan creation now starts processing after upload, with local in-process OCR -> NLP -> Search orchestration for development
 - OCR, NLP, search, and Lambda handler modules exist under `backend/app/api/scans/`
@@ -79,7 +80,8 @@ There are also local env/runtime files present:
 - Scan models, provider, and `IScanService` implementation now exist for upload/polling/progress tracking
 - Scan processing screen exists and shows upload/OCR/summarization/keywords/search progress states
 - Results screen now exists with Videos, Articles, and Websites tabs
-- Results UI now shows the original image, summary, keywords, share action, resource opening, and local bookmark toggles
+- Results UI now shows the original image, summary, keywords, share action, resource opening, and persisted bookmark toggles
+- Bookmarks screen now exists and loads saved resources from the backend
 - Home screen can launch camera, start a scan session, reopen active progress, and let processing continue when the progress screen is dismissed
 
 ### Mobile: tested
@@ -105,12 +107,12 @@ There are also local env/runtime files present:
 - 12.1 Mobile camera/capture module
 - 13.1 Mobile scan processing orchestrator and progress tracking
 - 14.1 Mobile results display UI
+- 15.1 Bookmark management APIs and mobile bookmark manager
 
 ### Still pending from task plan
 
 - Most optional property-based tests across backend and mobile
 - Backend task 8: structured error handling, rate limiting, monitoring/metrics
-- Task 15: bookmark management across backend and mobile
 - Task 17: scan history and offline access
 - Task 18: network error handling and retry logic
 - Task 19: performance optimization
@@ -123,7 +125,6 @@ There are also local env/runtime files present:
 The mobile app now supports the scan processing flow after capture, but still lacks the post-processing product surface:
 
 - no history screen
-- no bookmark persistence or bookmark backend sync
 - no offline cache/database implementation
 - no network retry/offline queue implementation
 
@@ -186,14 +187,14 @@ Impact:
 
 - task list marks social login UI/module work complete, but the actual auth implementation is not complete
 
-### 4. Bookmarking is UI-only for now
+### 4. Scan history and offline persistence are still missing
 
-Task 14.1 adds bookmark buttons in the results UI, but task 15 is still pending, so bookmarks are currently local to the in-memory session and are not persisted or synced.
+Bookmarks are now persisted, but scan history, local caching, and offline access are still not implemented.
 
 Impact:
 
-- the button/interaction exists
-- bookmarks will disappear when app state is lost
+- users can save resources
+- users still cannot browse prior scans or use cached results offline
 
 ### 5. Generated/build artifacts are committed locally
 
@@ -212,7 +213,7 @@ Impact:
 
 ### 6. Test status in `tasks.md` is still optimistic compared with mobile reality
 
-`tasks.md` now correctly marks scan orchestration as implemented, but there is still almost no corresponding mobile automated coverage beyond a smoke test.
+`tasks.md` now correctly marks scan orchestration, results, and bookmarks as implemented, but there is still almost no corresponding mobile automated coverage beyond a smoke test.
 
 ### 7. Flutter test runner has a local generated-build cleanup issue
 
@@ -235,10 +236,9 @@ Impact:
 When coding starts, the most logical order appears to be:
 
 1. Align backend/mobile auth contracts
-2. Add bookmark persistence and bookmark APIs
-3. Build history/offline access
-4. Add offline/cache/retry behavior
-5. Backfill structured errors, tests, and monitoring
+2. Build history/offline access
+3. Add offline/cache/retry behavior
+4. Backfill structured errors, tests, and monitoring
 
 ## Important Assumptions
 

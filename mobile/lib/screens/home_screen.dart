@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/camera_models.dart';
 import '../models/scan_models.dart';
 import '../providers/scan_provider.dart';
+import 'bookmarks/bookmarks_screen.dart';
 import 'camera/camera_screen.dart';
 import 'results/results_screen.dart';
 import 'scan/scan_processing_screen.dart';
@@ -40,6 +41,17 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lens for E-Learning'),
+        actions: [
+          IconButton(
+            tooltip: 'Bookmarks',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BookmarksScreen()),
+              );
+            },
+            icon: const Icon(Icons.bookmarks_outlined),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),

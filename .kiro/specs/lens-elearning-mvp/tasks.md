@@ -360,8 +360,8 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test sharing functionality
     - _Requirements: 7.1, 7.3, 7.7_
 
-- [ ] 15. Implement bookmark management (Mobile App and Backend)
-  - [ ] 15.1 Create bookmark service and API endpoints
+- [x] 15. Implement bookmark management (Mobile App and Backend)
+  - [x] 15.1 Create bookmark service and API endpoints
     - Implement POST /api/v1/scans/{scan_id}/bookmarks endpoint
     - Implement GET /api/v1/bookmarks endpoint
     - Implement DELETE /api/v1/bookmarks/{bookmark_id} endpoint

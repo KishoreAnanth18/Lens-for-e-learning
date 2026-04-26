@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/app_config.dart';
 import 'providers/auth_provider.dart';
+import 'providers/bookmark_provider.dart';
 import 'providers/scan_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/auth_service_impl.dart';
+import 'services/bookmark_service_impl.dart';
 import 'services/scan_service_impl.dart';
 import 'services/token_manager.dart';
 
@@ -25,6 +27,10 @@ class LensELearningApp extends StatelessWidget {
     baseUrl: AppConfig.baseUrl,
     authService: _authService,
   );
+  static final BookmarkServiceImpl _bookmarkService = BookmarkServiceImpl(
+    baseUrl: AppConfig.baseUrl,
+    authService: _authService,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +44,9 @@ class LensELearningApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => ScanProvider(scanService: _scanService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => BookmarkProvider(bookmarkService: _bookmarkService),
         ),
       ],
       child: MaterialApp(
