@@ -47,6 +47,8 @@ def _make_tokens(user_id: str, email: str) -> AuthResponse:
         access_token=access_token,
         refresh_token=refresh_token,
         expires_in=expire_seconds,
+        user_id=user_id,
+        email=email,
     )
 
 
@@ -223,6 +225,8 @@ class AuthService:
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=expires_in,
+            user_id=payload["sub"],
+            email=payload["email"],
         )
 
     def _cognito_logout(self, access_token: str) -> None:
@@ -257,6 +261,8 @@ class AuthService:
             access_token=result["AccessToken"],
             refresh_token=refresh_token,
             expires_in=result.get("ExpiresIn", settings.TOKEN_EXPIRE_DAYS * 24 * 3600),
+            user_id=payload["sub"],
+            email=payload["email"],
         )
 
     def _cognito_verify_email(self, email: str, code: str) -> None:

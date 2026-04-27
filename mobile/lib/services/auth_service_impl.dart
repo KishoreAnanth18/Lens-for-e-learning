@@ -8,7 +8,14 @@ class AuthServiceImpl implements IAuthService {
   final TokenManager _tokenManager;
 
   AuthServiceImpl({required String baseUrl, TokenManager? tokenManager})
-      : _dio = Dio(BaseOptions(baseUrl: baseUrl)),
+      : _dio = Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 10),
+            sendTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 15),
+          ),
+        ),
         _tokenManager = tokenManager ?? TokenManager();
 
   @override
@@ -20,6 +27,8 @@ class AuthServiceImpl implements IAuthService {
       });
       final data = response.data as Map<String, dynamic>;
       return AuthResult.success(
+        token: data['access_token'] as String?,
+        refreshToken: data['refresh_token'] as String?,
         userId: data['user_id'] as String?,
         email: data['email'] as String?,
       );
@@ -92,9 +101,12 @@ class AuthServiceImpl implements IAuthService {
   }
 
   @override
-  Future<bool> verifyEmail(String code) async {
+  Future<bool> verifyEmail(String email, String code) async {
     try {
-      await _dio.post('/api/v1/auth/verify-email', data: {'code': code});
+      await _dio.post('/api/v1/auth/verify-email', data: {
+        'email': email,
+        'code': code,
+      });
       return true;
     } on DioException catch (_) {
       return false;
@@ -147,6 +159,7 @@ class AuthServiceImpl implements IAuthService {
     if (data is Map<String, dynamic>) {
       return data['detail'] as String? ??
           data['message'] as String? ??
+          data['error'] as String? ??
           'Request failed';
     }
     return e.message ?? 'Request failed';

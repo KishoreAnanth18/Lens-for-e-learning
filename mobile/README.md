@@ -21,6 +21,15 @@ flutter pub get
 flutter run
 ```
 
+For a physical Android device, pass your machine's local network IP as the backend base URL:
+```bash
+flutter run --dart-define=BASE_URL=http://192.168.1.X:8000
+```
+
+Notes:
+- `http://10.0.2.2:8000` is only for the Android emulator
+- Replace `192.168.1.23` with your current machine IP on the same Wi-Fi/LAN as the device
+
 ### Testing
 
 Run unit tests:

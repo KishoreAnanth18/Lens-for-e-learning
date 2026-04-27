@@ -31,6 +31,8 @@ class AuthResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int  # seconds
+    user_id: str
+    email: str
 
 
 class UserProfile(BaseModel):

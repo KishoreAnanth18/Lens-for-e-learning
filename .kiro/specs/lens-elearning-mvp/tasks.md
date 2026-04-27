@@ -384,7 +384,7 @@ The plan prioritizes core functionality first (authentication, image upload, OCR
     - Test bookmark sync
     - _Requirements: 7.4, 7.5_
 
-- [ ] 16. Checkpoint - Ensure core mobile app features work
+- [x] 16. Checkpoint - Ensure core mobile app features work
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 17. Implement scan history and offline access (Mobile App)

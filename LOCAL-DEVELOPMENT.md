@@ -44,6 +44,18 @@ Expected:
 {"status": "healthy", "services": {"dynamodb": "ok", "s3": "ok"}, "endpoint": "http://localhost:4566"}
 ```
 
+## Inspect persisted data
+
+Scan the LocalStack DynamoDB table:
+```powershell
+aws --endpoint-url=http://localhost:4566 dynamodb scan --table-name lens-elearning-local --region us-east-1
+```
+
+List LocalStack S3 objects:
+```powershell
+aws --endpoint-url=http://localhost:4566 s3 ls s3://lens-elearning-images --recursive
+```
+
 ## Stop LocalStack
 
 ```bash

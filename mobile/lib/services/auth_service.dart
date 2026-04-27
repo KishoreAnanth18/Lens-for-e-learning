@@ -6,6 +6,6 @@ abstract class IAuthService {
   Future<AuthResult> loginWithGoogle();
   Future<AuthResult> loginWithFacebook();
   Future<void> logout();
-  Future<bool> verifyEmail(String code);
+  Future<bool> verifyEmail(String email, String code);
   Future<String> getValidToken();
 }

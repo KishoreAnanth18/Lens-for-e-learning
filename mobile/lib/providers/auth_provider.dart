@@ -80,9 +80,9 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(false);
   }
 
-  Future<bool> verifyEmail(String code) async {
+  Future<bool> verifyEmail(String email, String code) async {
     _setLoading(true);
-    final success = await _authService.verifyEmail(code);
+    final success = await _authService.verifyEmail(email, code);
     _setLoading(false);
 
     if (!success) {

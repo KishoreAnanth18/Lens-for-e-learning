@@ -1,6 +1,6 @@
 # Lens for E-Learning Context
 
-Last updated: 2026-04-26
+Last updated: 2026-04-27
 
 ## Purpose
 
@@ -88,6 +88,7 @@ There are also local env/runtime files present:
 
 - Only a minimal widget smoke test exists in `mobile/test/widget_test.dart`
 - `flutter analyze lib test/widget_test.dart` is currently clean after the results-module changes
+- `flutter test test/widget_test.dart -r expanded` is currently passing again
 - There is not yet meaningful test coverage for auth flows, camera flows, scan orchestration, history, results, bookmarks, or offline behavior
 
 ## Task Status Summary
@@ -108,6 +109,7 @@ There are also local env/runtime files present:
 - 13.1 Mobile scan processing orchestrator and progress tracking
 - 14.1 Mobile results display UI
 - 15.1 Bookmark management APIs and mobile bookmark manager
+- 16. Core mobile checkpoint
 
 ### Still pending from task plan
 
@@ -134,7 +136,6 @@ The design/tasks mention endpoints for:
 
 - `GET /api/v1/scans`
 - `DELETE /api/v1/scans/{scan_id}`
-- bookmark endpoints
 
 These are not yet visible in the current backend routing.
 
@@ -214,15 +215,6 @@ Impact:
 ### 6. Test status in `tasks.md` is still optimistic compared with mobile reality
 
 `tasks.md` now correctly marks scan orchestration, results, and bookmarks as implemented, but there is still almost no corresponding mobile automated coverage beyond a smoke test.
-
-### 7. Flutter test runner has a local generated-build cleanup issue
-
-After adding results dependencies, `flutter test` hit a Flutter-tool cleanup failure for `build/unit_test_assets` even after that path no longer existed.
-
-Impact:
-
-- static analysis is clean
-- the current environment may need a manual `mobile/build` cleanup before broader Flutter test runs
 
 ## Practical Working Notes
 

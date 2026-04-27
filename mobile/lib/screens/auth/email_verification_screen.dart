@@ -33,7 +33,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     }
 
     final provider = context.read<AuthProvider>();
-    final success = await provider.verifyEmail(code);
+    final success = await provider.verifyEmail(widget.email, code);
 
     if (!mounted) return;
 
