@@ -1,6 +1,6 @@
 # Lens for E-Learning Context
 
-Last updated: 2026-04-27
+Last updated: 2026-06-02
 
 ## Purpose
 
@@ -55,12 +55,16 @@ There are also local env/runtime files present:
 - Mock auth flow is implemented in memory
 - Cognito-backed auth flow is partially implemented
 - Scan upload endpoint exists in `backend/app/api/scans/router.py`
+- Scan list endpoint now exists at `GET /api/v1/scans`
 - Scan status endpoint exists at `GET /api/v1/scans/{scan_id}`
+- Scan delete endpoint now exists at `DELETE /api/v1/scans/{scan_id}`
 - Bookmark endpoints now exist at `POST /api/v1/scans/{scan_id}/bookmarks`, `GET /api/v1/bookmarks`, and `DELETE /api/v1/bookmarks/{bookmark_id}`
 - Image validation, upload to S3, thumbnail generation, duplicate detection, and scan metadata creation exist
 - Scan creation now starts processing after upload, with local in-process OCR -> NLP -> Search orchestration for development
 - OCR, NLP, search, and Lambda handler modules exist under `backend/app/api/scans/`
 - Health endpoints exist, including AWS/LocalStack connectivity check
+- Request IDs, structured error envelopes, in-memory rate limiting, and structured request/metric logging are now wired in `backend/app/main.py`
+- Backend performance optimizations now include cached AWS clients/resources, persisted summary previews on scan metadata, and paginated scan listing
 - Infrastructure docs and Terraform for DynamoDB, S3, Cognito, and IAM are present
 
 ### Backend: tested
@@ -83,12 +87,16 @@ There are also local env/runtime files present:
 - Results UI now shows the original image, summary, keywords, share action, resource opening, and persisted bookmark toggles
 - Bookmarks screen now exists and loads saved resources from the backend
 - Home screen can launch camera, start a scan session, reopen active progress, and let processing continue when the progress screen is dismissed
+- History screen, detail screen, and SQLite-backed local scan cache now exist
+- Mobile app now has connectivity monitoring, an offline status banner, queued bookmark/delete mutations, and automatic sync attempts when connectivity returns
+- Mobile performance optimizations now include debounced history search and downsampled thumbnail decoding for history/results image rendering
 
 ### Mobile: tested
 
-- Only a minimal widget smoke test exists in `mobile/test/widget_test.dart`
-- `flutter analyze lib test/widget_test.dart` is currently clean after the results-module changes
-- `flutter test test/widget_test.dart -r expanded` is currently passing again
+- Mobile verification is healthy again in the current environment when run outside the sandbox
+- `flutter analyze lib test/widget_test.dart` passed on 2026-06-02
+- `flutter test test/widget_test.dart -r expanded` passed on 2026-06-02
+- `flutter test test/history_test.dart -r expanded` passed on 2026-06-02
 - There is not yet meaningful test coverage for auth flows, camera flows, scan orchestration, history, results, bookmarks, or offline behavior
 
 ## Task Status Summary
@@ -110,77 +118,36 @@ There are also local env/runtime files present:
 - 14.1 Mobile results display UI
 - 15.1 Bookmark management APIs and mobile bookmark manager
 - 16. Core mobile checkpoint
+- 17.1 Scan history and offline access foundation
+- 18.1 Network error handling and retry mechanisms
+- 8.1 Structured backend error responses and rate limiting foundation
+- 8.4 Structured logging and metric-style request logs
+- 19.1 Backend performance optimizations
+- 19.4 Mobile performance optimizations
+- 20. All-features checkpoint
 
 ### Still pending from task plan
 
 - Most optional property-based tests across backend and mobile
-- Backend task 8: structured error handling, rate limiting, monitoring/metrics
-- Task 17: scan history and offline access
-- Task 18: network error handling and retry logic
-- Task 19: performance optimization
 - Tasks 21-23: integration testing, deployment hardening, production readiness
 
 ## Major Gaps Between Spec and Current Code
 
 ### Mobile feature coverage gap
 
-The mobile app now supports the scan processing flow after capture, but still lacks the post-processing product surface:
+The mobile app now supports the scan processing flow after capture and includes history/offline foundations, but still lacks full depth in a few areas:
 
-- no history screen
-- no offline cache/database implementation
-- no network retry/offline queue implementation
+- scan upload itself is not yet queued for full offline submission
+- offline sync currently focuses on queued bookmark mutations and scan deletion requests
+- mobile automated coverage is still very light relative to feature surface
 
-### Backend API surface gap
+### Deployment/production gap
 
-The design/tasks mention endpoints for:
-
-- `GET /api/v1/scans`
-- `DELETE /api/v1/scans/{scan_id}`
-
-These are not yet visible in the current backend routing.
-
-### Error-handling gap
-
-The design defines structured error responses with error codes, timestamps, details, request IDs, and 429 handling. Current code only has a minimal `ErrorResponse` model in scan models and does not appear to provide a consistent error envelope across the API.
-
-### Monitoring/rate limiting gap
-
-CloudWatch-oriented logging/metrics/rate limiting are described in the spec but not yet clearly implemented in application code.
+The codebase is substantially closer to MVP-complete locally, but production deployment tasks still require real AWS access, credentials, and environment validation that cannot be completed from source inspection alone.
 
 ## Known Issues and Spec Drift
 
-### 1. Mobile email verification request does not match backend contract
-
-Backend `VerifyEmailRequest` requires both:
-
-- `email`
-- `code`
-
-But `mobile/lib/services/auth_service_impl.dart` sends only:
-
-- `code`
-
-The verification screen has the email available, but it is not passed into the request.
-
-Impact:
-
-- verify-email is likely broken against the backend contract
-
-### 2. Mobile auth service expects fields backend does not currently return
-
-`AuthServiceImpl` reads fields such as:
-
-- `user_id`
-- `email`
-
-from register/login responses. Backend `AuthResponse` currently returns token fields and expiry only.
-
-Impact:
-
-- provider state may be partially empty after login/register
-- the mobile app and backend response models are out of sync
-
-### 3. OAuth is declared but not implemented in mobile
+### 1. OAuth is declared but not implemented in mobile
 
 `loginWithGoogle()` and `loginWithFacebook()` in `mobile/lib/services/auth_service_impl.dart` throw `UnimplementedError`.
 
@@ -188,16 +155,29 @@ Impact:
 
 - task list marks social login UI/module work complete, but the actual auth implementation is not complete
 
-### 4. Scan history and offline persistence are still missing
+### 2. Offline sync scope is partial
 
-Bookmarks are now persisted, but scan history, local caching, and offline access are still not implemented.
+History caching and offline access now exist, and queued retry/sync exists for selected mutations, but the app still does not provide a full offline upload queue for new scans.
 
 Impact:
 
-- users can save resources
-- users still cannot browse prior scans or use cached results offline
+- users can browse cached results offline
+- bookmark/save/delete actions can be queued
+- brand-new scans still require connectivity to begin upload
 
-### 5. Generated/build artifacts are committed locally
+### 3. Deployment tasks remain environment-blocked
+
+Task 22 and the final production-readiness checkpoint still require:
+
+- real AWS deployment execution
+- API Gateway/Cognito wiring validation
+- production smoke tests against deployed infrastructure
+
+Impact:
+
+- these items should not be marked done until executed against a real target environment
+
+### 4. Generated/build artifacts are committed locally
 
 Repo contains build/runtime artifacts such as:
 
@@ -212,28 +192,27 @@ Impact:
 - noise during search/review
 - higher chance of accidental edits in generated content
 
-### 6. Test status in `tasks.md` is still optimistic compared with mobile reality
-
-`tasks.md` now correctly marks scan orchestration, results, and bookmarks as implemented, but there is still almost no corresponding mobile automated coverage beyond a smoke test.
+### 5. Optional test backlog is still large
+The core local verification slice is now stronger, but most optional property tests and broader end-to-end scenarios remain open.
 
 ## Practical Working Notes
 
 - Prefer using spec docs plus real source code together; `tasks.md` alone overstates some areas
-- Treat backend auth and scan upload foundations as present but not fully aligned with the mobile client
-- Treat the mobile app as a connected vertical slice with results UI, but not a full MVP yet
+- Treat backend auth and mobile auth contracts as broadly aligned for email/password flows, with OAuth still incomplete
+- Treat the mobile app as a working MVP slice with history/offline foundations, but not a fully production-hardened app yet
 - When implementing next features, ignore generated directories unless debugging build/runtime issues
 
 ## Recommended Next Implementation Order
 
 When coding starts, the most logical order appears to be:
 
-1. Align backend/mobile auth contracts
-2. Build history/offline access
-3. Add offline/cache/retry behavior
-4. Backfill structured errors, tests, and monitoring
+1. Add full offline upload queue support for new scans
+2. Expand automated coverage around network/offline and end-to-end scan flows
+3. Execute real AWS deployment and smoke tests
+4. Close remaining optional property-test backlog as needed
 
 ## Important Assumptions
 
-- This summary is based on repo contents as of 2026-04-26
+- This summary is based on repo contents as of 2026-06-02
 - Analysis focused on source and documentation; generated artifacts were inspected only enough to classify them as non-source
 - No feature code was intentionally modified while creating this file

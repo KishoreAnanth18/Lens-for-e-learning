@@ -228,11 +228,12 @@ def process_nlp_event(event: NLPEvent, invoke_next_stage: bool = True) -> NLPRes
         # Update scan metadata status
         table.update_item(
             Key={"PK": f"SCAN#{scan_id}", "SK": "METADATA"},
-            UpdateExpression="SET #s = :s, updated_at = :u",
+            UpdateExpression="SET #s = :s, updated_at = :u, summary = :summary",
             ExpressionAttributeNames={"#s": "status"},
             ExpressionAttributeValues={
                 ":s": "nlp_complete",
                 ":u": processed_at,
+                ":summary": summary,
             },
         )
     except Exception as exc:

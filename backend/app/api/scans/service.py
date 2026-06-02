@@ -4,7 +4,7 @@ import base64
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 
@@ -153,6 +153,86 @@ def create_scan_record(
     table.put_item(Item=item)
 
     return item
+
+
+def list_scans(
+    user_id: str,
+    *,
+    limit: int = 20,
+    next_token: Optional[dict[str, Any]] = None,
+) -> dict:
+    """List scans for a user in reverse chronological order."""
+    ddb = get_dynamodb_resource()
+    table = ddb.Table(settings.DYNAMODB_TABLE_NAME)
+
+    query_kwargs = {
+        "IndexName": "GSI1",
+        "KeyConditionExpression": "GSI1PK = :pk",
+        "ExpressionAttributeValues": {
+            ":pk": f"USER#{user_id}",
+        },
+        "Limit": max(1, min(limit, 50)),
+        "ScanIndexForward": False,
+    }
+
+    if next_token:
+        query_kwargs["ExclusiveStartKey"] = next_token
+
+    response = table.query(**query_kwargs)
+    items = response.get("Items", [])
+
+    scans = [
+        {
+            "scan_id": item.get("scan_id"),
+            "status": item.get("status"),
+            "created_at": item.get("created_at"),
+            "updated_at": item.get("updated_at"),
+            "image_thumbnail_key": item.get("image_thumbnail_key"),
+            "summary": item.get("summary"),
+            "error_message": item.get("error_message"),
+        }
+        for item in items
+        if item.get("SK") == "METADATA"
+    ]
+
+    last_evaluated_key = response.get("LastEvaluatedKey")
+    encoded_next = None
+    if last_evaluated_key:
+        encoded_next = last_evaluated_key
+
+    return {
+        "scans": scans,
+        "next_token": encoded_next,
+    }
+
+
+def delete_scan(scan_id: str, user_id: str) -> None:
+    """Delete a scan record and related entities for the owning user."""
+    ddb = get_dynamodb_resource()
+    table = ddb.Table(settings.DYNAMODB_TABLE_NAME)
+
+    metadata = table.get_item(Key={"PK": f"SCAN#{scan_id}", "SK": "METADATA"}).get("Item")
+    if not metadata or metadata.get("user_id") != user_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found")
+
+    s3 = get_s3_client()
+    keys_to_delete = [
+        metadata.get("image_s3_key"),
+        metadata.get("image_thumbnail_key"),
+    ]
+    for key in keys_to_delete:
+        if not key:
+            continue
+        try:
+            s3.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=key)
+        except Exception:
+            logger.warning("[scan_id=%s] Failed to delete S3 object %s", scan_id, key)
+
+    with table.batch_writer() as batch:
+        for sk in ("METADATA", "OCR_DATA", "NLP_DATA", "RESULTS"):
+            batch.delete_item(
+                Key={"PK": f"SCAN#{scan_id}", "SK": sk},
+            )
 
 
 def trigger_scan_processing(scan_id: str, user_id: str, image_s3_key: str) -> None:

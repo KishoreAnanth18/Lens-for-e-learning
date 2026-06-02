@@ -3,7 +3,7 @@ import 'package:lens_elearning/main.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const LensELearningApp());
+    await tester.pumpWidget(const LensELearningApp(enableNetworkMonitoring: false));
     await tester.pump();
     expect(find.text('Sign In'), findsOneWidget);
   });

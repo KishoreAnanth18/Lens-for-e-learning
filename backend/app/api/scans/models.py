@@ -25,6 +25,8 @@ class ErrorResponse(BaseModel):
     error_code: str
     message: str
     request_id: str
+    timestamp: Optional[str] = None
+    details: Optional[dict] = None
 
 
 class ScanResource(BaseModel):
@@ -46,3 +48,18 @@ class ScanStatusResponse(BaseModel):
     videos: List[dict] = Field(default_factory=list)
     articles: List[dict] = Field(default_factory=list)
     websites: List[dict] = Field(default_factory=list)
+
+
+class ScanListItem(BaseModel):
+    scan_id: str
+    status: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    image_thumbnail_key: Optional[str] = None
+    summary: Optional[str] = None
+    error_message: Optional[str] = None
+
+
+class ScanListResponse(BaseModel):
+    scans: List[ScanListItem] = Field(default_factory=list)
+    next_token: Optional[str] = None

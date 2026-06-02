@@ -6,10 +6,22 @@ import '../models/camera_models.dart';
 import '../models/scan_models.dart';
 import '../services/scan_service.dart';
 
+/// Callback invoked when a scan completes successfully so the result can be
+/// persisted to the local cache.
+typedef ScanCompletedCallback = Future<void> Function({
+  required String localImagePath,
+  required ScanStatusData result,
+});
+
 class ScanProvider extends ChangeNotifier {
-  ScanProvider({required IScanService scanService}) : _scanService = scanService;
+  ScanProvider({
+    required IScanService scanService,
+    ScanCompletedCallback? onScanCompleted,
+  })  : _scanService = scanService,
+        _onScanCompleted = onScanCompleted;
 
   final IScanService _scanService;
+  ScanCompletedCallback? _onScanCompleted;
   final Map<String, ScanProgress> _sessions = {};
   final Map<String, StreamSubscription<ScanProgress>> _subscriptions = {};
   final Map<String, Set<String>> _bookmarksBySession = {};
@@ -21,7 +33,16 @@ class ScanProvider extends ChangeNotifier {
 
   ScanProgress? sessionById(String sessionId) => _sessions[sessionId];
 
+  /// Exposes the full sessions map for cross-provider lookups (e.g. history).
+  Map<String, ScanProgress> get sessions => Map.unmodifiable(_sessions);
+
   Set<String> bookmarksFor(String sessionId) => _bookmarksBySession[sessionId] ?? <String>{};
+
+  /// Update the cache callback (called by ProxyProvider when HistoryProvider
+  /// changes).
+  void updateCacheCallback(ScanCompletedCallback? callback) {
+    _onScanCompleted = callback;
+  }
 
   Future<String> startScan(CompressedImage image) async {
     final stream = _scanService.processScan(image);
@@ -33,6 +54,14 @@ class ScanProvider extends ChangeNotifier {
       (progress) {
         _sessions[progress.sessionId] = progress;
         notifyListeners();
+
+        // Cache the result when the scan completes successfully.
+        if (progress.isSuccessful && progress.result != null) {
+          _onScanCompleted?.call(
+            localImagePath: progress.localImagePath ?? '',
+            result: progress.result!,
+          );
+        }
       },
       onError: (Object error) {
         final previous = _sessions[first.sessionId];

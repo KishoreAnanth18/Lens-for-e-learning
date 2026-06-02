@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
+    RATE_LIMIT_REQUESTS: int = 60
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
 
     @property
     def aws_endpoint_url(self) -> Optional[str]:

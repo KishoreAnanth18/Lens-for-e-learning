@@ -4,12 +4,20 @@ import '../models/bookmark_models.dart';
 import '../models/scan_models.dart';
 import 'auth_service.dart';
 import 'bookmark_service.dart';
+import 'network_utils.dart';
 
 class BookmarkServiceImpl implements IBookmarkService {
   BookmarkServiceImpl({
     required String baseUrl,
     required IAuthService authService,
-  })  : _dio = Dio(BaseOptions(baseUrl: baseUrl)),
+  })  : _dio = Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 8),
+            sendTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 12),
+          ),
+        ),
         _authService = authService;
 
   final Dio _dio;
@@ -18,9 +26,11 @@ class BookmarkServiceImpl implements IBookmarkService {
   @override
   Future<List<BookmarkItem>> getBookmarks() async {
     final token = await _authService.getValidToken();
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/api/v1/bookmarks',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    final response = await retryWithBackoff(
+      () => _dio.get<Map<String, dynamic>>(
+        '/api/v1/bookmarks',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      ),
     );
     final raw = response.data?['bookmarks'];
     if (raw is! List) return const [];
@@ -37,15 +47,17 @@ class BookmarkServiceImpl implements IBookmarkService {
     required ScanResource resource,
   }) async {
     final token = await _authService.getValidToken();
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/api/v1/scans/$scanId/bookmarks',
-      data: {
-        'resource_type': resourceType,
-        'resource_url': resource.url,
-        'resource_title': resource.title,
-        'resource_description': resource.description,
-      },
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    final response = await retryWithBackoff(
+      () => _dio.post<Map<String, dynamic>>(
+        '/api/v1/scans/$scanId/bookmarks',
+        data: {
+          'resource_type': resourceType,
+          'resource_url': resource.url,
+          'resource_title': resource.title,
+          'resource_description': resource.description,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      ),
     );
     return BookmarkItem.fromJson(response.data ?? const <String, dynamic>{});
   }
@@ -53,9 +65,11 @@ class BookmarkServiceImpl implements IBookmarkService {
   @override
   Future<void> deleteBookmark(String bookmarkId) async {
     final token = await _authService.getValidToken();
-    await _dio.delete<void>(
-      '/api/v1/bookmarks/$bookmarkId',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    await retryWithBackoff(
+      () => _dio.delete<void>(
+        '/api/v1/bookmarks/$bookmarkId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      ),
     );
   }
 }

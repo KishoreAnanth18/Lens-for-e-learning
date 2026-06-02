@@ -7,13 +7,21 @@ import 'package:uuid/uuid.dart';
 import '../models/camera_models.dart';
 import '../models/scan_models.dart';
 import 'auth_service.dart';
+import 'network_utils.dart';
 import 'scan_service.dart';
 
 class ScanServiceImpl implements IScanService {
   ScanServiceImpl({
     required String baseUrl,
     required IAuthService authService,
-  })  : _dio = Dio(BaseOptions(baseUrl: baseUrl)),
+  })  : _dio = Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 8),
+            sendTimeout: const Duration(seconds: 15),
+            receiveTimeout: const Duration(seconds: 15),
+          ),
+        ),
         _authService = authService;
 
   final Dio _dio;
@@ -67,7 +75,7 @@ class ScanServiceImpl implements IScanService {
           stage: ScanStage.failed,
           progress: 1,
           statusMessage: 'Scan failed',
-          errorMessage: '$error',
+          errorMessage: friendlyNetworkMessage(error, action: 'process this scan'),
         ),
       );
     } finally {
@@ -139,7 +147,10 @@ class ScanServiceImpl implements IScanService {
       }
     }
 
-    throw Exception(_extractError(lastError) ?? 'Upload failed after 3 attempts.');
+    throw Exception(
+      _extractError(lastError) ??
+          'Upload failed after 3 attempts. Please try again when your connection is stable.',
+    );
   }
 
   Future<void> _pollForCompletion(
@@ -248,10 +259,12 @@ class ScanServiceImpl implements IScanService {
   @override
   Future<ScanStatusData> getScanResult(String scanId) async {
     final token = await _authService.getValidToken();
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/api/v1/scans/$scanId',
-      options: Options(
-        headers: {'Authorization': 'Bearer $token'},
+    final response = await retryWithBackoff(
+      () => _dio.get<Map<String, dynamic>>(
+        '/api/v1/scans/$scanId',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+        ),
       ),
     );
     return ScanStatusData.fromJson(response.data ?? const <String, dynamic>{});

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/auth_result.dart';
 import 'auth_service.dart';
+import 'network_utils.dart';
 import 'token_manager.dart';
 
 class AuthServiceImpl implements IAuthService {
@@ -21,10 +22,12 @@ class AuthServiceImpl implements IAuthService {
   @override
   Future<AuthResult> register(String email, String password) async {
     try {
-      final response = await _dio.post('/api/v1/auth/register', data: {
-        'email': email,
-        'password': password,
-      });
+      final response = await retryWithBackoff(
+        () => _dio.post('/api/v1/auth/register', data: {
+          'email': email,
+          'password': password,
+        }),
+      );
       final data = response.data as Map<String, dynamic>;
       return AuthResult.success(
         token: data['access_token'] as String?,
@@ -42,10 +45,12 @@ class AuthServiceImpl implements IAuthService {
   @override
   Future<AuthResult> login(String email, String password) async {
     try {
-      final response = await _dio.post('/api/v1/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
+      final response = await retryWithBackoff(
+        () => _dio.post('/api/v1/auth/login', data: {
+          'email': email,
+          'password': password,
+        }),
+      );
       final data = response.data as Map<String, dynamic>;
       final accessToken = data['access_token'] as String?;
       final refreshToken = data['refresh_token'] as String?;
@@ -103,10 +108,12 @@ class AuthServiceImpl implements IAuthService {
   @override
   Future<bool> verifyEmail(String email, String code) async {
     try {
-      await _dio.post('/api/v1/auth/verify-email', data: {
-        'email': email,
-        'code': code,
-      });
+      await retryWithBackoff(
+        () => _dio.post('/api/v1/auth/verify-email', data: {
+          'email': email,
+          'code': code,
+        }),
+      );
       return true;
     } on DioException catch (_) {
       return false;
@@ -135,9 +142,11 @@ class AuthServiceImpl implements IAuthService {
       final refreshToken = await _tokenManager.getRefreshToken();
       if (refreshToken == null) return false;
 
-      final response = await _dio.post('/api/v1/auth/refresh', data: {
-        'refresh_token': refreshToken,
-      });
+      final response = await retryWithBackoff(
+        () => _dio.post('/api/v1/auth/refresh', data: {
+          'refresh_token': refreshToken,
+        }),
+      );
       final data = response.data as Map<String, dynamic>;
       final newAccessToken = data['access_token'] as String?;
       final newRefreshToken = data['refresh_token'] as String?;

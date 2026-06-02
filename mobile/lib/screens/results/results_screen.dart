@@ -34,6 +34,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ScanProvider>();
+    final bookmarkProvider = context.watch<BookmarkProvider>();
     final progress = provider.sessionById(widget.sessionId);
 
     if (progress == null || progress.result == null) {
@@ -71,6 +72,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
         ),
         body: Column(
           children: [
+            if (bookmarkProvider.errorMessage != null)
+              MaterialBanner(
+                content: Text(bookmarkProvider.errorMessage!),
+                actions: [
+                  TextButton(
+                    onPressed: () => bookmarkProvider.loadBookmarks(force: true),
+                    child: const Text('Refresh'),
+                  ),
+                ],
+              ),
             _ResultsContextCard(progress: progress),
             Expanded(
               child: TabBarView(
@@ -148,6 +159,7 @@ class _ResultsContextCard extends StatelessWidget {
                       File(imagePath),
                       width: 88,
                       height: 88,
+                      cacheWidth: 176,
                       fit: BoxFit.cover,
                     ),
                   )
