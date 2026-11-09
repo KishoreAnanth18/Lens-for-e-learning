@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: str = "lens-elearning-images"
     DYNAMODB_TABLE_NAME: str = "lens-elearning-local"
 
+    # OCR - set True to skip Tesseract (useful when Tesseract not installed locally)
+    USE_MOCK_OCR: bool = False
+
     # Cognito - not used in local dev (USE_MOCK_AUTH=True bypasses Cognito)
     USE_MOCK_AUTH: bool = False
     COGNITO_USER_POOL_ID: str = ""
