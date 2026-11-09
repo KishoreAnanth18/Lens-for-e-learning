@@ -221,12 +221,28 @@ class AuthService:
         access_token = result["AccessToken"]
         refresh_token = result.get("RefreshToken", "")
         expires_in = result.get("ExpiresIn", settings.TOKEN_EXPIRE_DAYS * 24 * 3600)
+
+        # Retrieve user attributes from Cognito using the access token.
+        # Cognito access tokens are RS256-signed; calling get_user is the
+        # canonical way to extract sub/email without managing JWKS locally.
+        try:
+            user_resp = cognito.get_user(AccessToken=access_token)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to retrieve user info: {exc}",
+            )
+
+        attrs = {a["Name"]: a["Value"] for a in user_resp.get("UserAttributes", [])}
+        user_id = attrs.get("sub", "")
+        resolved_email = attrs.get("email", email)
+
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=expires_in,
-            user_id=payload["sub"],
-            email=payload["email"],
+            user_id=user_id,
+            email=resolved_email,
         )
 
     def _cognito_logout(self, access_token: str) -> None:
@@ -256,13 +272,31 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=str(exc),
             )
+
         result = resp["AuthenticationResult"]
+        new_access_token = result["AccessToken"]
+
+        # Retrieve user attributes from the new access token.
+        try:
+            user_resp = cognito.get_user(AccessToken=new_access_token)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to retrieve user info: {exc}",
+            )
+
+        attrs = {a["Name"]: a["Value"] for a in user_resp.get("UserAttributes", [])}
+        user_id = attrs.get("sub", "")
+        email = attrs.get("email", "")
+
         return AuthResponse(
-            access_token=result["AccessToken"],
+            access_token=new_access_token,
+            # Cognito does not return a new refresh token on REFRESH_TOKEN_AUTH;
+            # the original one remains valid until it expires.
             refresh_token=refresh_token,
             expires_in=result.get("ExpiresIn", settings.TOKEN_EXPIRE_DAYS * 24 * 3600),
-            user_id=payload["sub"],
-            email=payload["email"],
+            user_id=user_id,
+            email=email,
         )
 
     def _cognito_verify_email(self, email: str, code: str) -> None:
